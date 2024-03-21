@@ -7,7 +7,7 @@ trigger:
 
 variables: # terraform variables
     tag: '$(Build.BuildId)'
-  - template: ../varibale.yml
+    template: ../varibale.yml
 
 pool:
   vmImage: ubuntu-latest # This is the default if you don't specify a pool or vmImage.
