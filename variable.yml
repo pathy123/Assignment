@@ -1,0 +1,5 @@
+serviceconnection:
+serviceconnectiontoconatinerregistry:
+WebappName: 
+ContainerNamespace:
+dockerrepository:

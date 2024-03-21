@@ -1,0 +1,54 @@
+name: $(BuildDefinitionName)$(SourceBranchName)$(date:yyyyMMdd)$(rev:.r)
+
+trigger:
+  branches:
+    include:
+    - master
+
+variables: # terraform variables
+    tag: '$(Build.BuildId)'
+  - template: ../varibale.yml
+
+pool:
+  vmImage: ubuntu-latest # This is the default if you don't specify a pool or vmImage.
+
+ 
+stages:
+  - stage: Build
+    displayName: Build image
+    jobs:
+    - job: Build
+      displayName: Build
+      pool:
+        vmImage: ubuntu-latest
+      steps:
+      - script: |
+          echo Starting the build
+          mvn clean install --file pom.xml
+        displayName: 'Build the code'
+
+      - task: Docker@2
+        displayName: Build and push an image to container registry
+        inputs:
+          command: buildAndPush
+          repository: $(dockerrepository)
+          dockerfile: $(Build.SourcesDirectory)/Dockerfile
+          containerRegistry: '$(serviceconnectiontoconatinerregistry)' #service connection to contianer
+          tags: |
+            $(tag)
+  - stage:
+    displayName: WebappDeployment
+    jobs:
+    - job: Deployment
+      pool:
+        vmImage: ubuntu-latest
+      steps:
+      - task: AzureRmWebAppDeployment@4
+        inputs:
+          ConnectionType: 'AzureRM'
+          azureSubscription: '$(serviceconnection)' # service connection to Azure
+          appType: 'webAppContainer'
+          WebAppName: '$(WebappName)'
+          DockerNamespace: '$(ContainerNamespace)'
+          DockerRepository: '$(dockerrepository)'
+          DockerImageTag: $(tag)
